@@ -21,7 +21,7 @@ abstract class MultipleInstanceManager implements InstanceConfig, InstanceManage
      *
      * @var array
      */
-    protected array $config;
+    protected array $config = [];
 
     /**
      * The array of resolved instances.
@@ -45,6 +45,16 @@ abstract class MultipleInstanceManager implements InstanceConfig, InstanceManage
     protected string $driverKey = 'driver';
 
     /**
+     * Upgraded driver alias map.
+     *
+     *  - Key: original config key
+     *  - Value: resolved alias name from `$this->driverKey`
+     *
+     * @var array<string, string>
+     */
+    protected array $upgrades = [];
+
+    /**
      * Create a new manager instance.
      */
     public function __construct(array $config = [])
@@ -61,7 +71,14 @@ abstract class MultipleInstanceManager implements InstanceConfig, InstanceManage
      */
     public function getInstanceConfig(string $name): ?array
     {
-        if (is_null($config = $this->config[$name])) {
+        foreach ($this->config as $key => $value) {
+            if (!is_array($value) || is_null($upgrade = $value[$this->driverKey] ?? null)) {
+                continue;
+            }
+            $this->config[$this->upgrades[$key] = $upgrade] = $value;
+        }
+
+        if (is_null($config = $this->config[$name] ?? null)) {
             return null;
         }
 
@@ -117,7 +134,7 @@ abstract class MultipleInstanceManager implements InstanceConfig, InstanceManage
     protected function resolve(string $name)
     {
         $config     = $this->getInstanceConfig($name) ?? [];
-        $driverName = $name;
+        $driverName = $this->upgrades[$name] ?? $name;
 
         if (isset($this->customCreators[$driverName])) {
             return $this->callCustomCreator($driverName, $config);

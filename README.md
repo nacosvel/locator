@@ -47,6 +47,7 @@ return [
     'default' => 'alipay',
     'alipay'  => [
         'default'          => '2021004102600103',
+        // 'driver'           => AlipayPaymentManager::class,
         '2021004102600102' => [
             'app_id' => env('ALIPAY_APP_ID', '2021004102600102****'),
         ],
