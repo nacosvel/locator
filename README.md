@@ -38,84 +38,64 @@ composer require nacosvel/locator
 
 ## Usage
 
-### config.php
+### Config
 
 ```php
-<?php
-
 return [
     'default' => 'alipay',
     'alipay'  => [
         'default'          => '2021004102600103',
-        // 'driver'           => AlipayPaymentManager::class,
         '2021004102600102' => [
-            'app_id' => env('ALIPAY_APP_ID', '2021004102600102****'),
+            'app_id' => '2021004102600102****',
         ],
         '2021004102600103' => [
-            'app_id' => env('ALIPAY_APP_ID', '2021004102600103****'),
+            'app_id' => '2021004102600103****',
         ],
     ],
     'wechat'  => [
-        'mch_id' => env('WECHAT_MCH_ID', '190000****'),
+        'mch_id' => '190000****',
     ],
 ];
 ```
 
-### Payment::class
+### Use Cases
 
 ```php
-interface Payment
+use Nacosvel\Locator\Concerns\HasAdapter;
+use Nacosvel\Locator\Contracts\Adapter;
+use Nacosvel\Locator\MultipleManager;
+
+class Payment implements Adapter
 {
-}
-```
+    use HasAdapter;
 
-### PaymentManager::class
-
-```php
-use Nacosvel\Locator\MultipleInstanceManager;
-
-class PaymentManager extends MultipleInstanceManager
-{
-    public function __construct(array $config = [])
-    {
-        parent::__construct($config);
-    }
-
-    #[ReturnTypeWillChange]
-    public function instance(string $name = null): Payment
-    {
-        return parent::instance($name);
+    public function __construct(
+        protected string $name,
+        protected array $config,
+    ) {
+        //
     }
 }
 
-PaymentManager::macro('other', function () {
-    //
+$config  = require __DIR__ . '/config.php';
+$manager = new MultipleManager($config);
+
+$manager->extend('alipay', function (string $name, array $config) {
+    return new Payment($name, $config);
 });
 
-$payment = new PaymentManager(require __DIR__ . '/config.php');
-
-$payment->extend('alipay', function (array $config) {
-    return new Alipay($config);
+$manager->extend('wechat', function (string $name, array $config) {
+    return new Payment($name, $config);
 });
-$payment->extend('wechat', function (array $config) {
-    return new Wechat($config);
-});
-```
 
-### PaymentManager::instance
-
-```php
-$payment->instance(); // alipay
-```
-
-### PaymentManager::using
-
-```php
-var_dump($payment->getDefaultInstance());// alipay
-$payment->using('wechat', function () {
-    // wechat
-});
-var_dump($payment->getDefaultInstance());// alipay
+var_dump(
+    $manager->instance('alipay')->getName(),
+    $manager->instance('alipay')->getDefaultConfig(),
+    $manager->instance('alipay')->getConfig(),
+    $manager->instance('wechat')->getName(),
+    $manager->instance('wechat')->getDefaultConfig(),
+    $manager->instance('wechat')->getConfig(),
+);
 ```
 
 <!-- CONTRIBUTING -->
