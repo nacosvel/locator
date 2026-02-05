@@ -16,13 +16,21 @@ interface MultipleManager
     public function instance(string $name = null): Adapter;
 
     /**
+     * @param string $name
+     *
+     * @return bool
+     */
+    public function hasConfig(string $name): bool;
+
+    /**
      * Get specific configuration.
      *
      * @param string|null $name
+     * @param mixed|null  $default
      *
-     * @return array
+     * @return mixed
      */
-    public function getConfig(string $name = null): array;
+    public function getConfig(string $name = null, mixed $default = null): mixed;
 
     /**
      * Get the default driver name.

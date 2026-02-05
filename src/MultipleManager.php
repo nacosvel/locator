@@ -76,7 +76,7 @@ class MultipleManager implements Contracts\MultipleManager
      */
     protected function resolve(string $name): Adapter
     {
-        $config = $this->getConfig($name);
+        $config = $this->getConfig($name, []);
 
         if (isset($this->customCreators[$name])) {
             return $this->callCustomCreator($name, $config);
@@ -105,15 +105,48 @@ class MultipleManager implements Contracts\MultipleManager
     }
 
     /**
+     * @param string $name
+     *
+     * @return bool
+     */
+    public function hasConfig(string $name): bool
+    {
+        $items = $this->config;
+
+        foreach (explode('.', $name) as $key) {
+            if (!is_array($items) || !array_key_exists($key, $items)) {
+                return false;
+            }
+            $items = $items[$key];
+        }
+
+        return true;
+    }
+
+    /**
      * Get specific configuration.
      *
      * @param string|null $name
+     * @param mixed|null  $default
      *
-     * @return array
+     * @return mixed
      */
-    public function getConfig(string $name = null): array
+    public function getConfig(string $name = null, mixed $default = null): mixed
     {
-        return is_null($name) ? $this->config : $this->config[$name] ?? [];
+        $items = $this->config;
+
+        if (is_null($name)) {
+            return $items;
+        }
+
+        foreach (explode('.', $name) as $key) {
+            if (!is_array($items) || !array_key_exists($key, $items)) {
+                return $default;
+            }
+            $items = $items[$key];
+        }
+
+        return $items;
     }
 
     /**
