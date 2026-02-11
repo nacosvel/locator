@@ -8,7 +8,7 @@ interface Adapter
 
     public function hasConfig(string $name): bool;
 
-    public function getConfig(string $name = null): mixed;
+    public function getConfig(string $name = null, mixed $default = null): mixed;
 
     public function getDefaultConfig(): array;
 }
